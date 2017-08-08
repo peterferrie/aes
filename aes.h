@@ -1,4 +1,3 @@
-
 /**
   Copyright © 2015 Odzhan. All Rights Reserved.
 
@@ -31,34 +30,7 @@
 #ifndef AES_H
 #define AES_H
 
-#include <stdint.h>
-
-#define U8V(v)  ((uint8_t)(v)  & 0xFFU)
-#define U16V(v) ((uint16_t)(v) & 0xFFFFU)
-#define U32V(v) ((uint32_t)(v) & 0xFFFFFFFFUL)
-#define U64V(v) ((uint64_t)(v) & 0xFFFFFFFFFFFFFFFFULL)
-
-#define ROTL8(v, n) \
-  (U8V((v) << (n)) | ((v) >> (8 - (n))))
-
-#define ROTL16(v, n) \
-  (U16V((v) << (n)) | ((v) >> (16 - (n))))
-
-#define ROTL32(v, n) \
-  (U32V((v) << (n)) | ((v) >> (32 - (n))))
-
-#define ROTL64(v, n) \
-  (U64V((v) << (n)) | ((v) >> (64 - (n))))
-
-#define ROTR8(v, n) ROTL8(v, 8 - (n))
-#define ROTR16(v, n) ROTL16(v, 16 - (n))
-#define ROTR32(v, n) ROTL32(v, 32 - (n))
-#define ROTR64(v, n) ROTL64(v, 64 - (n))
-
-#ifdef USE_ASM
-#define aes_setkey(x, y) aes_setkeyx(x, y)
-#define aes_encrypt(x,y,z) aes_encryptx(x,y,z)
-#endif
+#include "macros.h"
 
 #define Nk 8      // key length in words
 #define Nr 14     // number of rounds for 256-bit
@@ -70,10 +42,9 @@
 #define AES_BLK_LEN Nb*4
 
 typedef union _aes_blk_t {
-  uint8_t   v8[Nb*4];
-  uint16_t v16[Nb*2];
-  uint32_t v32[Nb];
-  uint64_t v64[Nb/2];
+  uint8_t  b[Nb*4];
+  uint32_t w[Nb];
+  uint64_t q[Nb/2];
 } aes_blk;
 
 #pragma pack(push, 1)
@@ -95,6 +66,8 @@ typedef struct _aes_ctx_t {
 extern "C" { 
 #endif
 
+  void aes_enc (aes_ctx*, void*);
+  
   void aes_setkey (aes_ctx*, void*);
   void aes_setkeyx (aes_ctx*, void*);
   

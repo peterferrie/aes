@@ -94,40 +94,40 @@ void bin2scr (void *bin, uint32_t len)
 
 int ecb_test (void)
 {
-  int i, j, plen, clen, klen, fails=0;
+  int i, plen, clen, fails=0;
 
-  aes_blk ct1, ct2, pt1, pt2;
+  aes_blk ct1, pt1, pt2;
   uint8_t key[32];           // 256-bit key
   aes_ctx ctx;
   
   for (i=0; i<sizeof(ecb_keys)/sizeof(char*); i++)
   { 
-    klen=hex2bin (key, ecb_keys[i]);
-    clen=hex2bin (ct1.v8, ecb_ct[i]);
-    plen=hex2bin (pt1.v8, ecb_tv[i]);
+    hex2bin (key, ecb_keys[i]);
+    clen=hex2bin (ct1.b, ecb_ct[i]);
+    plen=hex2bin (pt1.b, ecb_tv[i]);
     
     aes_setkey (&ctx, &key);
     aes_encrypt (&ctx, &pt1, AES_ENCRYPT);
 
-    if (memcmp (ct1.v8, pt1.v8, clen)==0) {
-      printf ("\nEncryption passed test #%i - %08X %08X", 
-        (i+1), pt1.v32[0], ct1.v32[0]);
+    if (memcmp (ct1.b, pt1.b, clen)==0) {
+      printf ("Encryption passed test #%i - %08X %08X\n", 
+        (i+1), pt1.w[0], ct1.w[0]);
       
-      plen=hex2bin (pt2.v8, ecb_tv[i]);
+      plen=hex2bin (pt2.b, ecb_tv[i]);
       
       aes_encrypt (&ctx, &pt1, AES_DECRYPT);
       
-      if (memcmp (pt1.v8, pt2.v8, plen)==0) {
-        printf ("\nDecryption OK!");
+      if (memcmp (pt1.b, pt2.b, plen)==0) {
+        printf ("Decryption OK!\n");
       } else {
-        printf ("\nDecryption failed.. %08X %08X", pt1.v32[0], pt2.v32[0]);
+        printf ("Decryption failed.. %08X %08X\n", pt1.w[0], pt2.w[0]);
       }
     } else {
       fails++;
-      printf ("\nFailed test #%i : "
-          "Got %08X %08X %08X %08X instead of %08X %08X %08X %08X", (i+1), 
-          pt1.v32[0], pt1.v32[1], pt1.v32[2], pt1.v32[3],
-          ct1.v32[0], ct1.v32[1], ct1.v32[2], ct1.v32[3]);
+      printf ("Failed test #%i : "
+          "Got %08X %08X %08X %08X instead of %08X %08X %08X %08X\n", (i+1), 
+          pt1.w[0], pt1.w[1], pt1.w[2], pt1.w[3],
+          ct1.w[0], ct1.w[1], ct1.w[2], ct1.w[3]);
     }
   }
   return fails;

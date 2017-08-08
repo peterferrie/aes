@@ -62,7 +62,7 @@ void SubBytes (aes_ctx *ctx, aes_blk *state, int enc)
   uint8_t *sb=(enc==AES_ENCRYPT) ? ctx->sbox : ctx->sbox_inv;
 
   for (i=0; i<16; i++) {
-    state->v8[i] = sb[state->v8[i]];
+    state->b[i] = sb[state->b[i]];
   }      
 }
 // ------------------------------------
@@ -75,7 +75,7 @@ void ShiftRows (aes_blk *state, int enc)
   for (i=0; i<4; i++) {
     x=0;
     for (j=i; j<16; j+=4) {
-      x |= state->v8[j];
+      x |= state->b[j];
       x  = ROTR32(x, 8);
     }
     if (enc) {
@@ -84,7 +84,7 @@ void ShiftRows (aes_blk *state, int enc)
       x = ROTL32(x, i*8);
     }
     for (j=i; j<16; j+=4) {
-      state->v8[j] = (x & 0xff);
+      state->b[j] = (x & 0xff);
       x >>= 8;
     }
   } 
@@ -107,8 +107,8 @@ void MixColumns (uint32_t *state, int enc)
   {
     w = state[i];
     if (enc==AES_DECRYPT) {
-      t=ROTR32(w, 16) ^ w;
-      t=gf_mul2(gf_mul2(t));
+      t  = ROTR32(w, 16) ^ w;
+      t  = gf_mul2(gf_mul2(t));
       w ^= t;
     }
     state[i] = MixColumn(w);
@@ -123,7 +123,7 @@ void AddRoundKey (aes_blk *state, uint32_t w[], int rnd)
   uint8_t *key=(uint8_t*)&w[rnd*4];
   
   for (i=0; i<16; i++) {
-    state->v8[i] ^= key[i];
+    state->b[i] ^= key[i];
   }  
 }
 // ------------------------------------
@@ -161,26 +161,26 @@ void aes_setkey (aes_ctx *ctx, void *key)
   int i;
   uint32_t x;
   uint32_t *w=(uint32_t*)ctx->w;
-  uint8_t rcon=1;
+  uint32_t rcon=1;
   
   // generate the 2 sbox arrays
   gen_sbox (ctx);
   
   // copy user key into context
   for (i=0; i<Nk; i++) {
-    w[i]=((uint32_t*)key)[i];
+    w[i] = ((uint32_t*)key)[i];
   }
   
   // expand the key
   for (i=Nk; i<Nb*(Nr+1); i++)
   {
-    x=w[i-1];
+    x = w[i-1];
     if ((i % Nk)==0) {
       x = RotWord(x);
       x = SubWord(ctx, x) ^ rcon;
-      rcon=gf_mul2(rcon);
-    } else if (Nk > 6 && i % Nk == 4) {
-      x=SubWord(ctx, x);
+      rcon = gf_mul2(rcon);
+    } else if ((Nk > 6) && ((i % Nk) == 4)) {
+      x = SubWord(ctx, x);
     }
     w[i] = w[i-Nk] ^ x;
   }
