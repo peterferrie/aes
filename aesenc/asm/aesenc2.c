@@ -49,6 +49,13 @@ void aesenclast (uint8_t *s, const uint8_t *rk) {
 
 #include "../macros.h"
   
+  
+typedef union _w128_t {
+  uint8_t b[16];
+  uint8_t m[4][4];
+  uint32_t w[4];
+} w128_t;
+
 uint32_t XT (uint32_t w) {
     uint32_t t = w & 0x80808080;
     
@@ -82,12 +89,6 @@ uint8_t sub_byte (uint8_t x)
     }
     return sb ^ 0x63;
 }
-
-typedef union _w128_t {
-  uint8_t b[16];
-  uint8_t m[4][4];
-  uint32_t w[4];
-} w128_t;
 
 void aesenc (void *state, void *key, int last) {
     w128_t  *s, *k, v;
