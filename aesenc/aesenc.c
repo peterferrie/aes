@@ -112,7 +112,7 @@ void aesenc (void *state, void *key, int last) {
         v.w[i] = ROTR32(w,  8) ^ 
                  ROTR32(w, 16) ^ 
                  ROTL32(w,  8) ^ 
-                 XT(ROTR32(w, 8) ^ w);
+                 gf_mul2(ROTR32(w, 8) ^ w);
       }
     }
     // add round key
