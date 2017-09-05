@@ -58,7 +58,7 @@ typedef union _w128_t {
   uint32_t w[4];
 } w128_t;
 
-uint32_t XT (uint32_t w) {
+uint32_t gf_mul2 (uint32_t w) {
     uint32_t t = w & 0x80808080;
     
     return ( (w ^ t ) << 1) ^ ( ( t >> 7) * 0x0000001B);
@@ -66,8 +66,6 @@ uint32_t XT (uint32_t w) {
 // ------------------------------------
 // substitute byte
 // ------------------------------------
-uint8_t sub_bytex (uint8_t x);
-
 uint8_t sub_byte (uint8_t x)
 {
     uint8_t i, y=x, sb;
@@ -75,13 +73,13 @@ uint8_t sub_byte (uint8_t x)
     if (x) {
       // calculate logarithm gen 3
       for (i=1, y=1; i != 0; i++) {
-        y ^= XT(y);
+        y ^= gf_mul2(y);
         if (y == x) break;
       }
       x = ~i;
       // calculate anti-logarithm gen 3
       for (i=0, y=1; i<x; i++) {
-        y ^= XT(y);
+        y ^= gf_mul2(y);
       }
     }
 
