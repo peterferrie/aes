@@ -93,43 +93,6 @@ ar_l1:
     loop   ar_l1
     popad
     ret
-; ***********************************************     
-; void ShiftRows (void *state, int enc)
-; *********************************************** 
-ShiftRows:
-    pushad
-    xor    ebx, ebx          ; i = 0
-    mov    ebp, ecx          ; save enc flag in ebp
-    mov    cl, 4             ; do 4 rows
-sr_l1:
-    pushad
-    mov    edi, esi
-    mov    cl, 4             
-sr_l2:                       ; get row
-    lodsd
-    call   SubByte
-    shrd   edx, eax, 8
-    loop   sr_l2
-    ; ---------------------
-    lea    ecx, [ecx+ebx*8]
-    test   ebp, ebp
-    jz     sr_d
-    ror    edx, cl           ; rotate right for encryption
-    db     83h ;mask rol
-sr_d:
-    rol    edx, cl           ; rotate left for decryption
-    mov    cl, 4
-sr_l4:
-    mov    [edi], dl
-    ror    edx, 8
-    scasd
-    loop   sr_l4
-    popad
-    inc    ebx
-    inc    esi
-    loop   sr_l1
-    popad
-    ret
 
 %define w0 eax
 %define w1 ebx
@@ -155,41 +118,26 @@ gf_mul2:
 ; ***********************************************
 MixColumns:
     pushad
-    lea    edi, [ebp+(gf_mul2-ShiftRows)]
-    test   ecx, ecx
     mov    cl, 4
 mc_l1:
-    pushfd
     lodsd                    ; w0 = state[i];
-    jne    mc_l2
-    mov    w3, w0
-    ror    w3, 16
-    xor    w3, w0
-    call   edi               ; gf_mul2
-    call   edi               ; gf_mul2
-    xor    w0, w3
-mc_l2:
     mov    w3, w0
     ror    w3, 8
     mov    w1, w3
     xor    w3, w0
-    call   edi
+    call   gf_mul2
     xor    w1, w3
     ror    w0, 16
     xor    w1, w0
     ror    w0, 8
     xor    w1, w0
     mov    [esi-4], w1
-    popfd
     loop   mc_l1
     popad
     ret
     
 ld_fn:
     pop    eax
-    lea    ebp, [eax+(ShiftRows -AddRoundKey)]
-    lea    edx, [ebp+(MixColumns-ShiftRows)]
-    
     ; ************************************
     push   Nr
     pop    ebx
@@ -272,25 +220,13 @@ sk_sw:
 ; *********************************************** 
 SubByte:
     pushad
-    test   ebp, ebp
     mov    cl, 4
-    jz     sb_inv
     call   gf_mulinv
 sb_l1:
     rol    dl, 1
     xor    al, dl
     loop   sb_l1
-sb_inv:
     xor    al, 63h
-    jecxz  xit_sb
-    rol    al, 1
-    mov    dl, al
-    rol    dl, 2
-    xor    al, dl
-    rol    dl, 3
-    xor    al, dl
-    call   gf_mulinv
-xit_sb:
     mov    byte[esp+_eax], al
     popad
     ret

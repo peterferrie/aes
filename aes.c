@@ -45,16 +45,15 @@ uint8_t gf_mulinv (uint8_t x)
 {
     uint8_t y=x, i;
 
-    if (x)
-    {
+    if (x) {
       // calculate logarithm gen 3
-      for (y=1, i=0; ;i++) {
-        y ^= gf_mul2 (y);
-        if (y==x) break;
+      for (i=1, y=1; i > 0; i++) {
+        y ^= gf_mul2(y);
+        if (y == x) break;
       }
-      i+=2;
+      x = ~i;
       // calculate anti-logarithm gen 3
-      for (y=1; i; i++) {
+      for (i=0, y=1; i < x; i++) {
         y ^= gf_mul2(y);
       }
     }
@@ -222,6 +221,7 @@ void aes_encrypt (aes_ctx *ctx, void *state, int enc)
 
       for (round=1; round<Nr; round++)
       {
+        //printf ("\n%08X ", *(uint32_t*)state);
         SubBytes (state, enc);
         ShiftRows (state, enc);
         MixColumns (state, enc);
@@ -244,4 +244,70 @@ void aes_encrypt (aes_ctx *ctx, void *state, int enc)
     SubBytes (state, enc);
     ShiftRows (state, enc);
     AddRoundKey (state, w, round);
+}
+
+uint32_t XT (uint32_t w) {
+    uint32_t t = w & 0x80808080;
+    
+    return ( (w ^ t ) << 1) ^ ( ( t >> 7) * 0x0000001B);
+}
+
+typedef union _w128_t {
+  uint8_t b[16];
+  uint8_t m[4][4];
+  uint32_t w[4];
+} w128_t;
+
+void aes_enc (void *state, void *key) {
+    w128_t  *s, *k, v;
+    uint32_t i, w, r;
+    
+    s=(w128_t*)state;
+    k=(w128_t*)key;
+
+    // copy first key to local buffer
+    memcpy (&v, s, 16);
+    r = 0;
+    goto add_key;
+    
+    do { 
+      // sub bytes and shift rows
+      for (i=0; i<16; i++) {     
+        v.m[((i >> 2) + 4 - (i & 3) ) & 3][i & 3] = SubByte(s->b[i], AES_ENCRYPT);
+      }
+    
+      // if not last round
+      if (r != Nr) {
+        // mix columns
+        for (i=0; i<4; i++) {
+          w = v.w[i];
+          v.w[i] = ROTR32(w,  8) ^ 
+                   ROTR32(w, 16) ^ 
+                   ROTL32(w,  8) ^ 
+                   XT(ROTR32(w, 8) ^ w);
+        }
+      }
+add_key:    
+      // add round key
+      for (i=0; i<4; i++) {
+        s->w[i] = v.w[i] ^ k->w[i];
+      }
+      k++;    
+    } while (++r <= Nr);
+}
+
+void aes_encx (void *state, void *key) {
+    int     i, r;
+    w128_t  *s, *k;
+    
+    s=(w128_t*)state;
+    k=(w128_t*)key;
+    
+    for (i=0; i<4; i++) {
+      s->w[i] ^= k->w[i];
+    }
+
+    for (r=1; k++, r<=Nr; r++) {      
+      //aesenc(s, k, r==Nr);
+    }      
 }
