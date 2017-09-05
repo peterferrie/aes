@@ -54,39 +54,28 @@ uint32_t XT (uint32_t w) {
     
     return ( (w ^ t ) << 1) ^ ( ( t >> 7) * 0x0000001B);
 }
-
-// ------------------------------------
-// multiplicative inverse
-// ------------------------------------
-uint8_t gf_mulinv (uint8_t x)
-{
-    uint8_t y=x, i;
-
-    if (x)
-    {
-      // calculate logarithm gen 3
-      for (y=1, i=0; ;i++) {
-        y ^= XT(y);
-        if (y==x) break;
-      }
-      i += 2;
-      // calculate anti-logarithm gen 3
-      for (y=1; i; i++) {
-        y ^= XT(y);
-      }
-    }
-    return y;
-}
-
 // ------------------------------------
 // substitute byte
 // ------------------------------------
-uint8_t SubByte (uint8_t x)
+uint8_t sub_byte (uint8_t x)
 {
-    uint8_t i, y=0, sb;
+    uint8_t i, y=x, sb;
 
-    sb = y = gf_mulinv (x);
+    if (x) {
+      // calculate logarithm gen 3
+      for (i=1, y=1; i != 0; i++) {
+        y ^= gf_mul2(y);
+        if (y == x) break;
+      }
+      x = ~i;
+      // calculate anti-logarithm gen 3
+      for (i=0, y=1; i<x; i++) {
+        y ^= gf_mul2(y);
+      }
+    }
 
+    sb = y;
+    
     for (i=0; i<4; i++) {
       y   = ROTL8(y, 1);
       sb ^= y;
