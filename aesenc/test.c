@@ -47,8 +47,11 @@ int main (void) {
     s128.x = _mm_aesenc_si128 (s128.x, rk128.x);
     _mm_storeu_si128 (&s0.x, s128.x);
 
-    if (!memcmp(s.b, s0.b, 16)) printf("aesenc ok\n");
-    else printf("aesenc fail\n");
+    if (!memcmp(s.b, s0.b, 16)) { 
+      printf("aesenc ok\n");
+    } else {
+      printf("aesenc fail\n");
+    }
 
     rk128.x = _mm_load_si128 (&rk.x);
     s128.x = _mm_load_si128 (&s.x);
@@ -62,6 +65,9 @@ int main (void) {
     s128.x = _mm_aesenclast_si128 (s128.x, rk128.x);
     _mm_storeu_si128 (&s0.x, s128.x);
 
-    if (!memcmp(s.b, s0.b, 16)) printf("aesenclast ok\n");
-    else printf("aesenclast fail\n");
+    if (!memcmp(s.b, s0.b, 16)) {
+      printf("aesenclast ok\n");
+    } else { 
+      printf("aesenclast fail\n");
+    }
 }
