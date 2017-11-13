@@ -78,6 +78,18 @@ typedef unsigned I64T u64;
 
 #define ECRYPT_DEFAULT_ROT
 
+#ifdef _MSC_VER
+
+#define ROTR8(v, n) _rotr8(v, n)
+#define ROTR16(v, n) _rotr16(v, n)
+#define ROTR32(v, n) _rotr(v, n)
+
+#define ROTL8(v, n) ROTR8(v, 8-n)
+#define ROTL16(v, n) ROTR16(v, 16-n)
+#define ROTL32(v, n) ROTR32(v, 32-n)
+
+#else
+  
 #define ROTL8(v, n) \
   (U8V((v) << (n)) | ((v) >> (8 - (n))))
 
@@ -94,6 +106,8 @@ typedef unsigned I64T u64;
 #define ROTR16(v, n) ROTL16(v, 16 - (n))
 #define ROTR32(v, n) ROTL32(v, 32 - (n))
 #define ROTR64(v, n) ROTL64(v, 64 - (n))
+
+#endif
 
 #include "machine.h"
 
